@@ -18,7 +18,6 @@
 4. Reveiw不是一个工具，而是一个流程，一个Code Reivew的流程，只不过在这个流程中，Agent可能会调用一些工具，比如读文件内容的工具，去获取更加详细的上下文信息
 5. Java的版本，只要是Java8以上即可，构建工具使用Gradle
 
-
 ## 整体的Agent设计
 我认为我们这个Agent可以分为3层：
 1. CLI层 负责处理用户的输入，解析指令
@@ -60,3 +59,26 @@
   是 Agent Core 单独拿 toolResults 拼 prompt，还是 message list 本身就已经包含了 tool result message？
 
   答：Session中的历史消息，AgentConfig我认为在Session创建的时候，就存入一份，这样我们可以基于这份配置在这个Session中修改，RunState不放在Session，表示这一次执行的状态，比如是否结束，存储这个轮次过程中的LLM的历史输入，比如tool result,llm output,我认为 tool results可以看做是一个特殊的Message，就放在message list中吧。
+  
+## 技术选型
+在CLI层，我可以使用哪些开源库，能够快速解析CLI参数等等
+在Agent Core层，我们是否需要使用Spring这样的依赖注入框架，帮助我们解决依赖注入等相关的问题？
+在LLM Client层，我们的网络库选型应该是什么？Okhttp? Retrofit? 还是 Apache HttpCient?
+除了以上我考虑到的，我们还需要考虑哪些技术选型呢？
+
+---
+1. CLI 参数解析 我认为还是上picocli吧
+2. 我认为对象不是很多，手动也可以
+3. 我是需要streaming的
+4. JSON库的选择，使用Jackson
+5. 配置文件放在yml中
+6. 日志，我没有很好的建议，你认为log4j2好，还是logBack好呢？
+
+---
+HTTP客户端就选择OkHttp吧？不推荐Retrofit吗？
+日志的选型听你的，SLFJ 配合Logback
+测试框架使用Junit5
+
+## 项目框架搭建
+
+
