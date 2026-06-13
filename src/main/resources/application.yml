@@ -1,0 +1,21 @@
+# Code Review Agent 配置文件
+# 所有 Agent 相关配置统一管理
+
+agent:
+  # 最大对话轮数
+  max-rounds: 10
+  # 默认模型
+  default-model: gpt-4o
+
+llm:
+  # API 密钥（通过环境变量覆盖）
+  api-key: ${LLM_API_KEY:}
+  # API 基础 URL
+  base-url: https://api.openai.com/v1
+  # 请求超时（秒）
+  timeout: 60
+  # 连接超时（秒）
+  connect-timeout: 10
+
+logging:
+  level: INFO
