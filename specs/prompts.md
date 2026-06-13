@@ -80,5 +80,13 @@ HTTP客户端就选择OkHttp吧？不推荐Retrofit吗？
 测试框架使用Junit5
 
 ## 项目框架搭建
+技术选型定义好，接下来就开始搭建整个项目的框架了，我认为我们需要干：
+1. 配置好Gradle 依赖
+2. 搭建好源码目录结构
+你认为还需要做什么吗？
 
-
+---
+1. Gradle Wrapper 
+2. build.gradle.kts settings.gradle.kts
+3. 源码包 + 测试包
+4. resources 存放项目的相关配置
