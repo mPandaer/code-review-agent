@@ -371,7 +371,7 @@ body { max-width: 960px; margin: 0 auto; padding: 0 var(--md-space-md); }
      ============================================================ -->
 <header class="md-header">
   <span class="md-header-left">Code Review Agent</span>
-  <span class="md-header-tag">2 份文档</span>
+  <span class="md-header-tag">3 份文档</span>
 </header>
 
 <!-- ============================================================
@@ -664,6 +664,163 @@ Tool
     <div class="md-arch-row"><strong>OkHttp</strong> → LLM Client 层（HTTP 传输 + SSE Streaming）</div>
     <div class="md-arch-row"><strong>SLF4J + Logback</strong> → 全项目</div>
     <div class="md-arch-row"><strong>JUnit 5</strong> → 全项目测试</div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 03: 工具层接口设计
+     ============================================================ -->
+<section>
+  <div class="md-section-header">
+    <span class="md-text-label md-color-secondary">SECTION 03</span>
+    <h2 class="md-text-h2 md-font-mono md-color-primary">工具层接口设计</h2>
+    <div class="md-section-divider"></div>
+  </div>
+
+  <p class="md-text-body md-color-secondary" style="margin-bottom: var(--md-space-md);">
+    关联设计文档：<a href="./md/001-Agent设计文档.md" style="color:var(--md-text-primary);">001-Agent 设计文档</a>
+  </p>
+
+  <!-- Design principle -->
+  <div class="md-card" style="background: var(--md-accent-yellow); margin-bottom: var(--md-space-md);">
+    <div class="md-text-label md-color-secondary">设计原则</div>
+    <h3 class="md-card-title md-text-h3 md-font-mono">厂商无关，格式转换归 LLM Client 层</h3>
+    <p class="md-card-body md-text-body md-color-secondary">
+      Tool 层保持 vendor-neutral，不感知任何 LLM 供应商协议格式。<span class="md-inline-code">ToolDefinition</span> 为纯 POJO，格式转换器归属 LLM Client 层。
+    </p>
+  </div>
+
+  <!-- Core interfaces cards -->
+  <div class="md-card-grid">
+    <div class="md-card">
+      <div class="md-text-label md-color-secondary">接口</div>
+      <h3 class="md-card-title md-text-h3 md-font-mono">Tool</h3>
+      <p class="md-card-body md-text-body md-color-secondary">
+        <span class="md-inline-code">ToolDefinition definition()</span><br>
+        <span class="md-inline-code">ToolResult execute(JsonNode)</span>
+      </p>
+    </div>
+    <div class="md-card">
+      <div class="md-text-label md-color-secondary">POJO</div>
+      <h3 class="md-card-title md-text-h3 md-font-mono">ToolDefinition</h3>
+      <p class="md-card-body md-text-body md-color-secondary">
+        <strong>name</strong> — 工具名称<br>
+        <strong>description</strong> — 功能描述<br>
+        <strong>inputSchema</strong> — 入参 JSON Schema<br>
+        <strong>outputDescription</strong> — 返回值结构（JsonNode）
+      </p>
+    </div>
+    <div class="md-card">
+      <div class="md-text-label md-color-secondary">结果</div>
+      <h3 class="md-card-title md-text-h3 md-font-mono">ToolResult</h3>
+      <p class="md-card-body md-text-body md-color-secondary">
+        <strong>status</strong> — SUCCESS / INVALID_ARGUMENTS / EXECUTION_ERROR<br>
+        <strong>message</strong> — 成功 / 失败原因<br>
+        <strong>data</strong> — 结构化返回数据
+      </p>
+    </div>
+    <div class="md-card">
+      <div class="md-text-label md-color-secondary">注册中心</div>
+      <h3 class="md-card-title md-text-h3 md-font-mono">ToolRegistry</h3>
+      <p class="md-card-body md-text-body md-color-secondary">
+        <span class="md-inline-code">List&lt;ToolDefinition&gt; definitions()</span><br>
+        <span class="md-inline-code">Optional&lt;Tool&gt; find(String name)</span>
+      </p>
+    </div>
+  </div>
+
+  <!-- Format converters -->
+  <h3 class="md-text-h3 md-font-mono md-color-primary" style="margin-top: var(--md-space-lg);">格式转换（归属 LLM Client 层）</h3>
+
+  <div class="md-card-grid" style="margin-top: var(--md-space-md);">
+    <div class="md-card">
+      <div class="md-text-label md-color-secondary">转换器 1</div>
+      <h3 class="md-card-title md-text-h4 md-font-mono">ToolDefinition → LLM 格式</h3>
+      <p class="md-card-body md-text-body md-color-secondary">
+        将 vendor-neutral 的 <span class="md-inline-code">ToolDefinition</span> 转换为各 LLM 供应商的 tools 参数格式。OpenAI 使用 JSON Schema 格式的 <span class="md-inline-code">tools</span> 参数，Anthropic 格式略有不同。
+      </p>
+    </div>
+    <div class="md-card">
+      <div class="md-text-label md-color-secondary">转换器 2</div>
+      <h3 class="md-card-title md-text-h4 md-font-mono">ToolResult → ToolMessage</h3>
+      <p class="md-card-body md-text-body md-color-secondary">
+        将 <span class="md-inline-code">ToolResult</span> 转换为 LLM 协议中的 ToolMessage。OpenAI 用 <span class="md-inline-code">role: "tool"</span>，Anthropic Claude 用 <span class="md-inline-code">role: "user"</span> + tool_result 块。
+      </p>
+    </div>
+  </div>
+
+  <!-- Diff table -->
+  <h3 class="md-text-h3 md-font-mono md-color-primary" style="margin-top: var(--md-space-lg);">与之前设计的差异</h3>
+  <table class="md-info-table" style="margin-top: var(--md-space-sm);">
+    <thead>
+      <tr>
+        <th>变更点</th>
+        <th>旧设计</th>
+        <th>新设计</th>
+        <th>原因</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>ToolDefinition 格式</td>
+        <td>desc() 返回 XML</td>
+        <td>POJO，结构化字段</td>
+        <td class="md-color-secondary">保持厂商无关，转换交 LLM Client</td>
+      </tr>
+      <tr>
+        <td>ToolRegistry 方法</td>
+        <td>list() 返回描述字符串</td>
+        <td>definitions() 返回 List</td>
+        <td class="md-color-secondary">返回结构化数据，LLM Client 按需转换</td>
+      </tr>
+      <tr>
+        <td>格式转换位置</td>
+        <td>Tool 层自己处理</td>
+        <td>LLM Client 层</td>
+        <td class="md-color-secondary">Tool 层不应感知 LLM 供应商协议</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Original design appendix -->
+  <h3 class="md-text-h3 md-font-mono md-color-primary" style="margin-top: var(--md-space-lg);">原始方案</h3>
+  <p class="md-text-body md-color-secondary" style="margin-top: var(--md-space-sm);">
+    以下是设计讨论前的原始想法，保留于此记录推导过程。
+  </p>
+
+  <div class="md-card-grid" style="margin-top: var(--md-space-md);">
+    <div class="md-card">
+      <div class="md-text-label md-color-secondary">原始设计</div>
+      <h3 class="md-card-title md-text-h4 md-font-mono">desc() → XML</h3>
+      <p class="md-card-body md-text-body md-color-secondary">
+        ToolDefinition 用 <span class="md-inline-code">desc()</span> 方法返回 XML 格式字符串，包含工具描述、入参和返回值结构。
+      </p>
+    </div>
+    <div class="md-card">
+      <div class="md-text-label md-color-secondary">原始设计</div>
+      <h3 class="md-card-title md-text-h4 md-font-mono">list() → System prompt</h3>
+      <p class="md-card-body md-text-body md-color-secondary">
+        ToolRegistry 用 <span class="md-inline-code">list()</span> 返回描述字符串列表，直接放入 Agent 的 System prompt 中。
+      </p>
+    </div>
+    <div class="md-card">
+      <div class="md-text-label md-color-secondary">原始设计</div>
+      <h3 class="md-card-title md-text-h4 md-font-mono">Tool 层自转换</h3>
+      <p class="md-card-body md-text-body md-color-secondary">
+        格式转换逻辑放在 Tool 层内部，Tool 自身负责产出各 LLM 厂商所需格式。
+      </p>
+    </div>
+  </div>
+
+  <!-- Issues identified -->
+  <div class="md-highlight" style="margin-top: var(--md-space-md);">
+    <h4>讨论中发现的问题</h4>
+    <ul>
+      <li><strong>XML 不能直接用于 OpenAI tools 参数</strong> — LLM 使用 JSON Schema 格式，未来其他厂商格式也可能不同。改为 POJO，转换交 LLM Client。</li>
+      <li><strong>list() 返回字符串不灵活</strong> — 改为 <span class="md-inline-code">definitions()</span> 返回结构化数据，LLM Client 按需转换。</li>
+      <li><strong>Tool 层感知 LLM 协议违反分层</strong> — 格式转换移到 LLM Client 层。</li>
+      <li><strong>描述放 System prompt 不正确</strong> — LLM 实际通过 API 的 <span class="md-inline-code">tools</span> 参数获取工具定义。</li>
+    </ul>
   </div>
 </section>
 

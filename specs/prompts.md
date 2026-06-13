@@ -90,3 +90,6 @@ HTTP客户端就选择OkHttp吧？不推荐Retrofit吗？
 2. build.gradle.kts settings.gradle.kts
 3. 源码包 + 测试包
 4. resources 存放项目的相关配置
+
+## 我该从哪一步开始呢？
+现在Gradle环境配置完成了，我该从何处开始呢？我不知道从哪一步开始？
