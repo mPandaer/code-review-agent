@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Code Review Agent — 设计文档</title>
+<style>
+/* ============================================================
+   DESIGN TOKENS — 严格遵循 DESIGNS.md
+   ============================================================ */
+:root {
+  --md-bg-page:        #F4EFEA;
+  --md-bg-white:       #FFFFFF;
+  --md-bg-off-white:   #F8F8F7;
+  --md-bg-charcoal:    #383838;
+
+  --md-text-primary:   #383838;
+  --md-text-secondary: #666666;
+  --md-text-muted:     #A1A1A1;
+  --md-text-on-dark:   #FFFFFF;
+
+  --md-accent-blue:    #97D4FF;
+  --md-accent-teal:    #53DBC9;
+  --md-accent-purple:  #F7F1FF;
+  --md-accent-yellow:  #FFDD00;
+  --md-accent-coral:   #FF7169;
+  --md-accent-mint:    #F9FBE7;
+  --md-accent-sky:     #6FC2FF;
+
+  --md-border-width:   2px;
+  --md-border-color:   #383838;
+  --md-border:         var(--md-border-width) solid var(--md-border-color);
+
+  --md-space-xs:       8px;
+  --md-space-sm:       16px;
+  --md-space-md:       24px;
+  --md-space-lg:       40px;
+  --md-space-xl:       64px;
+  --md-space-2xl:      96px;
+
+  --md-font-mono:      "IBM Plex Mono", "Courier New", monospace;
+  --md-font-sans:      -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+  --md-text-h1:        48px;
+  --md-text-h2:        32px;
+  --md-text-h3:        24px;
+  --md-text-h4:        20px;
+  --md-text-body:      16px;
+  --md-text-sm:        14px;
+  --md-text-xs:        12px;
+
+  --md-leading-tight:   1.2;
+  --md-leading-normal:  1.5;
+  --md-leading-relaxed: 1.7;
+}
+
+/* ============================================================
+   RESET
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-family: var(--md-font-sans); color: var(--md-text-primary); background: var(--md-bg-page); }
+body { max-width: 960px; margin: 0 auto; padding: 0 var(--md-space-md); }
+
+/* ============================================================
+   UTILITY CLASSES — 严格遵循 DESIGNS.md §2
+   ============================================================ */
+.md-font-mono  { font-family: var(--md-font-mono); }
+.md-font-sans  { font-family: var(--md-font-sans); }
+.md-text-h1    { font-size: var(--md-text-h1); line-height: var(--md-leading-tight); font-weight: 400; }
+.md-text-h2    { font-size: var(--md-text-h2); line-height: var(--md-leading-tight); font-weight: 400; }
+.md-text-h3    { font-size: var(--md-text-h3); line-height: var(--md-leading-tight); font-weight: 400; }
+.md-text-h4    { font-size: var(--md-text-h4); line-height: var(--md-leading-tight); font-weight: 600; }
+.md-text-body  { font-size: var(--md-text-body); line-height: var(--md-leading-normal); }
+.md-text-sm    { font-size: var(--md-text-sm); line-height: var(--md-leading-normal); }
+.md-text-muted { color: var(--md-text-muted); }
+.md-text-label { font-size: var(--md-text-sm); font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+.md-color-primary   { color: var(--md-text-primary); }
+.md-color-secondary { color: var(--md-text-secondary); }
+.md-border       { border: var(--md-border); }
+.md-border-top   { border-top: var(--md-border); }
+.md-border-bottom { border-bottom: var(--md-border); }
+.md-p-sm  { padding: var(--md-space-sm); }
+.md-p-md  { padding: var(--md-space-md); }
+.md-p-lg  { padding: var(--md-space-lg); }
+.md-mt-lg { margin-top: var(--md-space-lg); }
+.md-mb-lg { margin-bottom: var(--md-space-lg); }
+
+/* ============================================================
+   LAYOUT COMPONENTS — 严格遵循 DESIGNS.md §3
+   ============================================================ */
+
+/* --- Header --- */
+.md-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--md-space-md) 0;
+  border-bottom: var(--md-border);
+}
+.md-header-left {
+  font-family: var(--md-font-mono);
+  font-size: var(--md-text-body);
+  font-weight: 600;
+  color: var(--md-text-primary);
+}
+.md-header-tag {
+  font-family: var(--md-font-mono);
+  font-size: var(--md-text-sm);
+  color: var(--md-text-on-dark);
+  background: var(--md-bg-charcoal);
+  padding: var(--md-space-xs) var(--md-space-sm);
+}
+
+/* --- Hero --- */
+.md-hero {
+  padding: var(--md-space-2xl) 0 var(--md-space-xl);
+}
+.md-hero h1 {
+  font-family: var(--md-font-mono);
+  font-size: var(--md-text-h1);
+  line-height: var(--md-leading-tight);
+  font-weight: 400;
+  color: var(--md-text-primary);
+}
+.md-hero p {
+  font-size: var(--md-text-body);
+  line-height: var(--md-leading-normal);
+  color: var(--md-text-muted);
+  margin-top: var(--md-space-sm);
+}
+.md-hero-divider {
+  width: 100%;
+  height: 0;
+  border-bottom: var(--md-border);
+  margin-top: var(--md-space-lg);
+}
+
+/* --- Section Header --- */
+.md-section-header {
+  padding: var(--md-space-lg) 0 var(--md-space-md);
+}
+.md-section-divider {
+  width: 100%;
+  height: 0;
+  border-bottom: var(--md-border);
+  margin-top: var(--md-space-sm);
+}
+
+/* --- Card --- */
+.md-card {
+  background: var(--md-bg-white);
+  border: var(--md-border);
+  padding: var(--md-space-md);
+}
+.md-card:hover {
+  background: var(--md-accent-blue);
+}
+.md-card-title {
+  margin: var(--md-space-xs) 0;
+}
+.md-card-body {
+  margin: 0;
+}
+
+/* --- Card Grid --- */
+.md-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--md-space-md);
+}
+
+/* --- Info Row --- */
+.md-info-row {
+  display: grid;
+  grid-template-columns: 160px 200px 1fr;
+  gap: var(--md-space-md);
+  align-items: baseline;
+  padding: var(--md-space-sm) 0;
+  border-bottom: 1px solid var(--md-text-muted);
+}
+.md-info-row:last-child {
+  border-bottom: none;
+}
+
+/* --- Info Table (tech detail) --- */
+.md-info-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: var(--md-space-sm);
+}
+.md-info-table th,
+.md-info-table td {
+  text-align: left;
+  padding: var(--md-space-sm);
+  border-bottom: 1px solid var(--md-text-muted);
+  font-size: var(--md-text-body);
+  line-height: var(--md-leading-normal);
+}
+.md-info-table th {
+  font-family: var(--md-font-mono);
+  font-size: var(--md-text-sm);
+  font-weight: 600;
+  color: var(--md-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.md-info-table td:first-child {
+  font-family: var(--md-font-mono);
+  font-weight: 600;
+  color: var(--md-text-primary);
+}
+
+/* --- Highlight box --- */
+.md-highlight {
+  background: var(--md-accent-yellow);
+  border: var(--md-border);
+  padding: var(--md-space-md);
+  margin-top: var(--md-space-md);
+}
+.md-highlight h4 {
+  font-family: var(--md-font-mono);
+  font-size: var(--md-text-h4);
+  margin-bottom: var(--md-space-xs);
+}
+.md-highlight ul {
+  list-style: none;
+  padding: 0;
+}
+.md-highlight li {
+  font-size: var(--md-text-body);
+  line-height: var(--md-leading-relaxed);
+  color: var(--md-text-primary);
+  padding: 4px 0;
+  padding-left: 16px;
+  position: relative;
+}
+.md-highlight li::before {
+  content: "▸";
+  position: absolute;
+  left: 0;
+  color: var(--md-text-primary);
+}
+
+/* --- Process steps --- */
+.md-steps {
+  list-style: none;
+  padding: 0;
+  counter-reset: step;
+}
+.md-steps li {
+  font-size: var(--md-text-body);
+  line-height: var(--md-leading-relaxed);
+  color: var(--md-text-primary);
+  padding: 6px 0 6px 36px;
+  position: relative;
+  border-left: 2px solid var(--md-text-muted);
+  margin-left: 12px;
+}
+.md-steps li::before {
+  counter-increment: step;
+  content: counter(step);
+  position: absolute;
+  left: -14px;
+  top: 8px;
+  width: 24px;
+  height: 24px;
+  background: var(--md-bg-charcoal);
+  color: var(--md-text-on-dark);
+  font-family: var(--md-font-mono);
+  font-size: var(--md-text-xs);
+  font-weight: 600;
+  text-align: center;
+  line-height: 24px;
+}
+
+/* --- Code block --- */
+.md-code {
+  background: var(--md-bg-off-white);
+  border: var(--md-border);
+  padding: var(--md-space-sm) var(--md-space-md);
+  font-family: var(--md-font-mono);
+  font-size: var(--md-text-sm);
+  line-height: var(--md-leading-relaxed);
+  white-space: pre;
+  overflow-x: auto;
+  margin-top: var(--md-space-sm);
+}
+
+/* --- Inline code --- */
+.md-inline-code {
+  font-family: var(--md-font-mono);
+  font-size: 0.9em;
+  background: var(--md-bg-off-white);
+  padding: 1px 6px;
+  border: 1px solid var(--md-text-muted);
+}
+
+/* --- Object hierarchy --- */
+.md-hierarchy {
+  font-family: var(--md-font-mono);
+  font-size: var(--md-text-sm);
+  line-height: 1.8;
+  color: var(--md-text-primary);
+  background: var(--md-bg-off-white);
+  border: var(--md-border);
+  padding: var(--md-space-md);
+  margin-top: var(--md-space-sm);
+  white-space: pre;
+  overflow-x: auto;
+}
+
+/* --- Architecture map --- */
+.md-arch-map {
+  display: flex;
+  flex-direction: column;
+  gap: var(--md-space-xs);
+  margin-top: var(--md-space-sm);
+  font-family: var(--md-font-mono);
+  font-size: var(--md-text-sm);
+}
+.md-arch-row {
+  display: flex;
+  align-items: center;
+  gap: var(--md-space-sm);
+  padding: var(--md-space-xs) var(--md-space-sm);
+  background: var(--md-bg-off-white);
+  border: 1px solid var(--md-text-muted);
+}
+.md-arch-row strong { min-width: 140px; }
+
+/* --- Footer --- */
+.md-footer {
+  padding: var(--md-space-xl) 0 var(--md-space-lg);
+  border-top: var(--md-border);
+  margin-top: var(--md-space-2xl);
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--md-text-sm);
+  color: var(--md-text-muted);
+}
+
+/* ============================================================
+   COLOR ROTATION — DESIGNS.md §4
+   ============================================================ */
+.md-card-grid > .md-card:nth-child(4n+1) { background: var(--md-accent-blue); }
+.md-card-grid > .md-card:nth-child(4n+2) { background: var(--md-accent-teal); }
+.md-card-grid > .md-card:nth-child(4n+3) { background: var(--md-accent-purple); }
+.md-card-grid > .md-card:nth-child(4n+4) { background: var(--md-accent-mint); }
+
+/* ============================================================
+   RESPONSIVE — DESIGNS.md §5
+   ============================================================ */
+@media (min-width: 768px) {
+  .md-card-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 767px) {
+  :root {
+    --md-text-h1: 32px;
+    --md-text-h2: 24px;
+  }
+  .md-info-row {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     HEADER — DESIGNS.md §3.1
+     ============================================================ -->
+<header class="md-header">
+  <span class="md-header-left">Code Review Agent</span>
+  <span class="md-header-tag">2 份文档</span>
+</header>
+
+<!-- ============================================================
+     HERO — DESIGNS.md §3.1
+     ============================================================ -->
+<section class="md-hero">
+  <h1>设计文档</h1>
+  <p>Code Review Agent 的架构设计与技术选型，基于 Java 8+ 构建，三层架构解耦 CLI / Agent Core / LLM Client。</p>
+  <div class="md-hero-divider"></div>
+</section>
+
+<!-- ============================================================
+     SECTION 01: Agent 整体设计
+     ============================================================ -->
+<section>
+  <div class="md-section-header">
+    <span class="md-text-label md-color-secondary">SECTION 01</span>
+    <h2 class="md-text-h2 md-font-mono md-color-primary">Agent 整体设计</h2>
+    <div class="md-section-divider"></div>
+  </div>
+
+  <p class="md-text-body md-color-secondary" style="margin-bottom: var(--md-space-md);">
+    第一版范围：不依赖 Agent 框架，Java 实现，核心机制为 Function Call / Tool Use。
+  </p>
+
+  <!-- Core conclusion card -->
+  <div class="md-card" style="background: var(--md-accent-yellow); margin-bottom: var(--md-space-md);">
+    <div class="md-text-label md-color-secondary">核心结论</div>
+    <h3 class="md-card-title md-text-h3 md-font-mono">三层架构成立，Agent Core 内部必须继续拆分</h3>
+    <p class="md-card-body md-text-body md-color-secondary">
+      外部分 <span class="md-inline-code">CLI</span>、<span class="md-inline-code">Agent Core</span>、<span class="md-inline-code">LLM API Client</span> 三层。最容易崩掉的地方在 <span class="md-inline-code">Agent Core</span> 内部 —— 如果 Session、RunState、RunConfig、ToolRegistry 的生命周期混在一起，会导致上下文污染、配置语义不清、工具调用逻辑散落。
+    </p>
+  </div>
+
+  <!-- Three layers cards -->
+  <div class="md-card-grid">
+    <div class="md-card">
+      <div class="md-text-label md-color-secondary">01 层</div>
+      <h3 class="md-card-title md-text-h3 md-font-mono">CLI</h3>
+      <ul class="md-card-body md-text-body md-color-secondary" style="list-style:none;padding:0;">
+        <li>▸ 解析用户命令和交互输入</li>
+        <li>▸ 创建、选择或加载 <span class="md-inline-code">Session</span></li>
+        <li>▸ 调用 <span class="md-inline-code">Agent.run(session, userInput)</span></li>
+        <li>▸ 渲染 <span class="md-inline-code">AgentRunResult</span></li>
+      </ul>
+    </div>
+    <div class="md-card">
+      <div class="md-text-label md-color-secondary">02 层</div>
+      <h3 class="md-card-title md-text-h3 md-font-mono">Agent Core</h3>
+      <ul class="md-card-body md-text-body md-color-secondary" style="list-style:none;padding:0;">
+        <li>▸ 维护 Agent Loop</li>
+        <li>▸ 追加 user / assistant / tool message</li>
+        <li>▸ 根据 LLM 返回决定是否调用工具</li>
+        <li>▸ 处理最大轮次和运行结果</li>
+      </ul>
+    </div>
+    <div class="md-card">
+      <div class="md-text-label md-color-secondary">03 层</div>
+      <h3 class="md-card-title md-text-h3 md-font-mono">LLM API Client</h3>
+      <ul class="md-card-body md-text-body md-color-secondary" style="list-style:none;padding:0;">
+        <li>▸ 请求转换为供应商格式</li>
+        <li>▸ 发送 LLM API 请求</li>
+        <li>▸ 响应转换为 <span class="md-inline-code">LlmResponse</span></li>
+        <li>▸ 不关心 Agent Loop</li>
+      </ul>
+    </div>
+    <div class="md-card">
+      <div class="md-text-label md-color-secondary">接口草图</div>
+      <h3 class="md-card-title md-text-h3 md-font-mono">关键接口</h3>
+      <div style="font-family:var(--md-font-mono);font-size:var(--md-text-sm);line-height:1.8;color:var(--md-text-primary);">
+        LlmClient.chat(request)<br>
+        Tool.definition()<br>
+        Tool.execute(arguments)<br>
+        ToolRegistry.definitions()
+      </div>
+    </div>
+  </div>
+
+  <!-- Recommended structure -->
+  <h3 class="md-text-h3 md-font-mono md-color-primary" style="margin-top: var(--md-space-lg);">推荐结构</h3>
+  <div class="md-hierarchy">
+CLI
+  CommandParser
+  ConsoleRenderer
+
+Agent Core
+  Agent
+  Session
+  SessionConfig
+  RunConfig
+  RunState
+  AgentRunResult
+
+LLM
+  LlmClient
+  LlmRequest
+  LlmResponse
+  AssistantMessage
+  ToolCall
+
+Tool
+  Tool
+  ToolDefinition
+  ToolRegistry
+  ToolResult
+  ToolMessageFactory
+  </div>
+
+  <!-- Agent Loop -->
+  <h3 class="md-text-h3 md-font-mono md-color-primary" style="margin-top: var(--md-space-lg);">Agent Loop 流程</h3>
+  <ol class="md-steps" style="margin-top: var(--md-space-sm);">
+    <li><strong>追加用户消息。</strong> <span class="md-inline-code">agent.run(session, userInput)</span> 开始时先追加为 <span class="md-inline-code">UserMessage</span>，确保 LLM 第一轮能看到新任务。</li>
+    <li><strong>冻结运行配置。</strong> 从 <span class="md-inline-code">SessionConfig</span> 复制生成 <span class="md-inline-code">RunConfig</span>，创建空的 <span class="md-inline-code">RunState</span>。</li>
+    <li><strong>调用 LLM。</strong> 使用当前消息列表、工具定义和配置构造 <span class="md-inline-code">LlmRequest</span>。</li>
+    <li><strong>保存 assistant 消息。</strong> 把 <span class="md-inline-code">LlmResponse.assistantMessage</span> 追加进 <span class="md-inline-code">Session.messages</span>。</li>
+    <li><strong>处理工具调用。</strong> 存在 tool calls 时按顺序执行，结果转换成 <span class="md-inline-code">ToolMessage</span> 追加进消息列表。</li>
+    <li><strong>判断结束。</strong> 无 tool calls → 返回结果；达到 <span class="md-inline-code">maxRounds</span> → 返回 <span class="md-inline-code">MAX_ROUNDS_EXCEEDED</span>。不追加控制消息。</li>
+  </ol>
+
+  <!-- Core objects -->
+  <div class="md-card-grid" style="margin-top: var(--md-space-lg);">
+    <div class="md-card">
+      <div class="md-text-label md-color-secondary">长期上下文</div>
+      <h3 class="md-card-title md-text-h3 md-font-mono">Session</h3>
+      <p class="md-card-body md-text-body md-color-secondary">
+        Session 保存会话级历史，message list 是 LLM 可见上下文主载体。ToolResult → ToolMessage → 消息列表。maxRounds exceeded 不写入消息列表。
+      </p>
+    </div>
+    <div class="md-card">
+      <div class="md-text-label md-color-secondary">单次运行</div>
+      <h3 class="md-card-title md-text-h3 md-font-mono">RunState</h3>
+      <p class="md-card-body md-text-body md-color-secondary">
+        RunState 保存当前轮次、是否结束等临时状态。currentRound 只属于一次 run。RunConfig 从 SessionConfig 快照生成，运行中不受 Session 修改影响。
+      </p>
+    </div>
+    <div class="md-card">
+      <div class="md-text-label md-color-secondary">运行结果</div>
+      <h3 class="md-card-title md-text-h3 md-font-mono">AgentRunResult</h3>
+      <p class="md-card-body md-text-body md-color-secondary">
+        status → COMPLETED / MAX_ROUNDS_EXCEEDED / FAILED<br>
+        finalMessage → 成功时的最终回答<br>
+        roundsUsed → 消耗轮次数
+      </p>
+    </div>
+    <div class="md-card">
+      <div class="md-text-label md-color-secondary">关键决策</div>
+      <h3 class="md-card-title md-text-h3 md-font-mono">工具调用</h3>
+      <p class="md-card-body md-text-body md-color-secondary">
+        ToolRegistry 只负责注册和查找。Tool 自己负责 JSON 反序列化和校验。参数错误包装为 ToolResult 回传 LLM。未知工具由 Agent Core 转为失败 ToolResult。
+      </p>
+    </div>
+  </div>
+
+  <!-- Boundaries warning -->
+  <div class="md-highlight">
+    <h4>⚠️ 三个必须守住的边界</h4>
+    <ul>
+      <li>不要把 <strong>Session</strong> 和 <strong>RunState</strong> 混在一起 —— 会导致当前轮次、最大轮次错误、临时状态污染长期上下文。</li>
+      <li>不要把 <strong>ToolResult</strong> 和 <strong>ToolMessage</strong> 混在一起 —— 会让工具领域模型和 LLM 协议格式耦合。</li>
+      <li>不要让 <strong>Agent Core</strong> 解析供应商原始响应 —— 否则多 LLM Client 实现时，Agent Core 会变成响应格式适配层。</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 02: 技术选型
+     ============================================================ -->
+<section>
+  <div class="md-section-header">
+    <span class="md-text-label md-color-secondary">SECTION 02</span>
+    <h2 class="md-text-h2 md-font-mono md-color-primary">技术选型</h2>
+    <div class="md-section-divider"></div>
+  </div>
+
+  <p class="md-text-body md-color-secondary" style="margin-bottom: var(--md-space-md);">
+    关联设计文档：<a href="./md/001-Agent设计文档.md" style="color:var(--md-text-primary);">001-Agent 设计文档</a>
+  </p>
+
+  <!-- Tech stack overview table -->
+  <table class="md-info-table">
+    <thead>
+      <tr>
+        <th>领域</th>
+        <th>选型</th>
+        <th>理由</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>构建工具</td>
+        <td>Gradle (Kotlin DSL)</td>
+        <td class="md-color-secondary">用户指定</td>
+      </tr>
+      <tr>
+        <td>Java 版本</td>
+        <td>Java 8+</td>
+        <td class="md-color-secondary">用户指定，保证广泛兼容性</td>
+      </tr>
+      <tr>
+        <td>CLI 参数解析</td>
+        <td>picocli</td>
+        <td class="md-color-secondary">注解+编程式双 API，子命令、自动补全、ANSI 彩色帮助信息</td>
+      </tr>
+      <tr>
+        <td>依赖注入</td>
+        <td>Manual DI</td>
+        <td class="md-color-secondary">对象图小，手动 DI 足够，避免框架学习成本和启动开销</td>
+      </tr>
+      <tr>
+        <td>HTTP 客户端</td>
+        <td>OkHttp</td>
+        <td class="md-color-secondary">原生支持 streaming body，SSE 协议处理成熟</td>
+      </tr>
+      <tr>
+        <td>JSON 处理</td>
+        <td>Jackson</td>
+        <td class="md-color-secondary">功能最全，同时支持 YAML，Spring Boot 默认选择</td>
+      </tr>
+      <tr>
+        <td>日志</td>
+        <td>SLF4J + Logback</td>
+        <td class="md-color-secondary">SLF4J 提供门面，Logback 配置简单，Spring Boot 默认方案</td>
+      </tr>
+      <tr>
+        <td>测试</td>
+        <td>JUnit 5</td>
+        <td class="md-color-secondary">Java 生态标准测试框架</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Detailed rationale cards -->
+  <h3 class="md-text-h3 md-font-mono md-color-primary" style="margin-top: var(--md-space-lg);">选型对比详情</h3>
+
+  <div class="md-card-grid" style="margin-top: var(--md-space-md);">
+    <div class="md-card">
+      <div class="md-text-label md-color-secondary">CLI 解析</div>
+      <h3 class="md-card-title md-text-h4 md-font-mono">picocli vs 其他</h3>
+      <p class="md-card-body md-text-body md-color-secondary">
+        <strong>不选：</strong>Commons CLI 功能弱、JCommander 已停更（2022）、argparse4j 类型安全性差。<br><br>
+        <strong>选 picocli：</strong>注解+编程式双 API，子命令支持，ANSI 彩色帮助，自动补全生成，活跃维护（2024.5）。
+      </p>
+    </div>
+    <div class="md-card">
+      <div class="md-text-label md-color-secondary">依赖注入</div>
+      <h3 class="md-card-title md-text-h4 md-font-mono">Manual DI</h3>
+      <p class="md-card-body md-text-body md-color-secondary">
+        对象图极小：Agent → LlmClient + ToolRegistry + Session，依赖层次浅。如果未来需要，切换到 Guice 只需改组装层，核心代码不动。
+      </p>
+    </div>
+    <div class="md-card">
+      <div class="md-text-label md-color-secondary">HTTP vs 其他</div>
+      <h3 class="md-card-title md-text-h4 md-font-mono">OkHttp vs Retrofit</h3>
+      <p class="md-card-body md-text-body md-color-secondary">
+        <strong>不选 Retrofit：</strong>LlmClient 只有一个 chat 方法，不值得引入完整依赖链。SSE streaming 需要自定义 Converter 和 CallAdapter，适配代码量比直接用 OkHttp 更多。
+      </p>
+    </div>
+    <div class="md-card">
+      <div class="md-text-label md-color-secondary">HTTP 对比</div>
+      <h3 class="md-card-title md-text-h4 md-font-mono">OkHttp vs Apache/Java 11</h3>
+      <p class="md-card-body md-text-body md-color-secondary">
+        <strong>OkHttp 胜出：</strong>Streaming body 原生支持、SSE 处理成熟、LLM 生态广泛采用。<br>
+        Apache HttpClient 5 和 Java 11 HttpClient 在 SSE 处理上需手写大量代码。
+      </p>
+    </div>
+    <div class="md-card">
+      <div class="md-text-label md-color-secondary">JSON</div>
+      <h3 class="md-card-title md-text-h4 md-font-mono">Jackson vs Gson</h3>
+      <p class="md-card-body md-text-body md-color-secondary">
+        <strong>不选 Gson：</strong>缺少 JsonNode 树模型（Tool.execute(JsonNode) 依赖）。<br><br>
+        <strong>选 Jackson：</strong>同时支持 YAML，一个依赖解决两个问题，Spring Boot 默认，生态最广。
+      </p>
+    </div>
+    <div class="md-card">
+      <div class="md-text-label md-color-secondary">日志</div>
+      <h3 class="md-card-title md-text-h4 md-font-mono">Logback vs Log4j2</h3>
+      <p class="md-card-body md-text-body md-color-secondary">
+        <strong>不选 Log4j2：</strong>异步日志和无垃圾模式为高并发服务端设计，CLI 工具用不上。<br><br>
+        <strong>选 Logback：</strong>与 SLF4J 同作者，无缝集成。通过 SLF4J 门面可随时切换。
+      </p>
+    </div>
+  </div>
+
+  <!-- Architecture mapping -->
+  <h3 class="md-text-h3 md-font-mono md-color-primary" style="margin-top: var(--md-space-lg);">技术选型与架构的映射</h3>
+  <div class="md-arch-map">
+    <div class="md-arch-row"><strong>picocli</strong> → CLI 层</div>
+    <div class="md-arch-row"><strong>Manual DI</strong> → Agent Core 层（组装 Agent + ToolRegistry + Session）</div>
+    <div class="md-arch-row"><strong>Jackson</strong> → 全项目（JSON 解析 + YAML 配置）</div>
+    <div class="md-arch-row"><strong>OkHttp</strong> → LLM Client 层（HTTP 传输 + SSE Streaming）</div>
+    <div class="md-arch-row"><strong>SLF4J + Logback</strong> → 全项目</div>
+    <div class="md-arch-row"><strong>JUnit 5</strong> → 全项目测试</div>
+  </div>
+</section>
+
+<!-- ============================================================
+     FOOTER
+     ============================================================ -->
+<footer class="md-footer">
+  <span>Code Review Agent — 设计文档索引</span>
+  <span>最后更新：2026-06-13</span>
+</footer>
+
+</body>
+</html>
