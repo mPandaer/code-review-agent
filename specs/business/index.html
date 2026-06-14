@@ -58,8 +58,8 @@
    RESET
    ============================================================ */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { font-family: var(--md-font-sans); color: var(--md-text-primary); background: var(--md-bg-page); }
-body { max-width: 960px; margin: 0 auto; padding: 0 var(--md-space-md); }
+html { font-family: var(--md-font-sans); color: var(--md-text-primary); background: var(--md-bg-page); scroll-behavior: smooth; }
+body { margin: 0; background: var(--md-bg-page); }
 
 /* ============================================================
    UTILITY CLASSES — 严格遵循 DESIGNS.md §2
@@ -362,16 +362,206 @@ body { max-width: 960px; margin: 0 auto; padding: 0 var(--md-space-md); }
     grid-template-columns: 1fr;
   }
 }
+
+/* ============================================================
+   SECTION NAVIGATION
+   ============================================================ */
+.md-layout {
+  display: flex;
+  gap: var(--md-space-lg);
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 var(--md-space-md) 96px;
+  position: relative;
+}
+
+.md-section-outline {
+  width: 220px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  height: 100vh;
+  overflow-y: auto;
+  padding: var(--md-space-xl) var(--md-space-md) var(--md-space-lg) 0;
+  border-right: 1px solid var(--md-text-muted);
+}
+
+.md-section-outline-label {
+  font-family: var(--md-font-mono);
+  font-size: var(--md-text-xs);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--md-text-secondary);
+  margin-bottom: var(--md-space-sm);
+}
+
+.md-section-outline-links {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.md-section-outline-links a {
+  text-decoration: none;
+  color: var(--md-text-muted);
+  font-size: var(--md-text-sm);
+  line-height: 1.5;
+  padding: 6px 0;
+  border-left: 2px solid transparent;
+  padding-left: 10px;
+}
+
+.md-section-outline-links a:hover,
+.md-section-outline-links a.active {
+  color: var(--md-text-primary);
+  border-left-color: var(--md-text-primary);
+}
+
+.md-main {
+  flex: 1;
+  min-width: 0;
+  max-width: 960px;
+}
+
+.md-section-nav {
+  position: fixed;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 12px;
+  background: rgba(248, 248, 247, 0.95);
+  border: var(--md-border);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+
+.md-section-nav-btn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--md-text-primary);
+  width: 28px;
+  height: 28px;
+  font-family: var(--md-font-mono);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.md-section-nav-btn:hover:not(:disabled) {
+  background: var(--md-bg-white);
+}
+
+.md-section-nav-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.md-section-nav-status {
+  min-width: 220px;
+  text-align: center;
+}
+
+.md-section-nav-status .index {
+  display: block;
+  font-family: var(--md-font-mono);
+  font-size: var(--md-text-xs);
+  letter-spacing: 0.05em;
+  color: var(--md-text-secondary);
+  text-transform: uppercase;
+}
+
+.md-section-nav-status .title {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--md-text-sm);
+  line-height: 1.3;
+  color: var(--md-text-primary);
+}
+
+@media (max-width: 1024px) {
+  .md-layout {
+    display: block;
+    max-width: 960px;
+    padding-bottom: 108px;
+  }
+
+  .md-section-outline {
+    width: auto;
+    height: auto;
+    position: sticky;
+    top: 0;
+    padding: 12px 0;
+    margin-bottom: var(--md-space-md);
+    background: rgba(244, 239, 234, 0.92);
+    backdrop-filter: blur(10px);
+    border-right: none;
+    border-bottom: 1px solid var(--md-text-muted);
+  }
+
+  .md-section-outline-links {
+    flex-direction: row;
+    gap: 10px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .md-section-outline-links::-webkit-scrollbar {
+    display: none;
+  }
+
+  .md-section-outline-links a {
+    flex-shrink: 0;
+    border-left: none;
+    border-bottom: 2px solid transparent;
+    padding: 6px 0 8px;
+  }
+
+  .md-section-outline-links a:hover,
+  .md-section-outline-links a.active {
+    border-left-color: transparent;
+    border-bottom-color: var(--md-text-primary);
+  }
+
+  .md-main {
+    max-width: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .md-section-nav {
+    gap: 10px;
+    padding: 8px 10px;
+  }
+
+  .md-section-nav-status {
+    min-width: 180px;
+  }
+}
+
 </style>
 </head>
 <body>
+
+<div class="md-layout">
+<div class="md-section-outline" id="section-outline">
+  <div class="md-section-outline-label">本节导航</div>
+  <div class="md-section-outline-links" id="section-outline-links"></div>
+</div>
+
+<main class="md-main">
 
 <!-- ============================================================
      HEADER — DESIGNS.md §3.1
      ============================================================ -->
 <header class="md-header">
   <span class="md-header-left">Code Review Agent</span>
-  <span class="md-header-tag">3 份文档</span>
+  <span class="md-header-tag">4 份文档</span>
 </header>
 
 <!-- ============================================================
@@ -386,7 +576,7 @@ body { max-width: 960px; margin: 0 auto; padding: 0 var(--md-space-md); }
 <!-- ============================================================
      SECTION 01: Agent 整体设计
      ============================================================ -->
-<section>
+<section id="sec-01">
   <div class="md-section-header">
     <span class="md-text-label md-color-secondary">SECTION 01</span>
     <h2 class="md-text-h2 md-font-mono md-color-primary">Agent 整体设计</h2>
@@ -481,7 +671,7 @@ Tool
   </div>
 
   <!-- Agent Loop -->
-  <h3 class="md-text-h3 md-font-mono md-color-primary" style="margin-top: var(--md-space-lg);">Agent Loop 流程</h3>
+  <h3 class="md-text-h3 md-font-mono md-color-primary" style="margin-top: var(--md-space-lg);" id="sec-01-loop">Agent Loop 流程</h3>
   <ol class="md-steps" style="margin-top: var(--md-space-sm);">
     <li><strong>追加用户消息。</strong> <span class="md-inline-code">agent.run(session, userInput)</span> 开始时先追加为 <span class="md-inline-code">UserMessage</span>，确保 LLM 第一轮能看到新任务。</li>
     <li><strong>冻结运行配置。</strong> 从 <span class="md-inline-code">SessionConfig</span> 复制生成 <span class="md-inline-code">RunConfig</span>，创建空的 <span class="md-inline-code">RunState</span>。</li>
@@ -492,7 +682,7 @@ Tool
   </ol>
 
   <!-- Core objects -->
-  <div class="md-card-grid" style="margin-top: var(--md-space-lg);">
+  <div class="md-card-grid" style="margin-top: var(--md-space-lg);" id="sec-01-objects">
     <div class="md-card">
       <div class="md-text-label md-color-secondary">长期上下文</div>
       <h3 class="md-card-title md-text-h3 md-font-mono">Session</h3>
@@ -526,7 +716,7 @@ Tool
   </div>
 
   <!-- Boundaries warning -->
-  <div class="md-highlight">
+  <div class="md-highlight" id="sec-01-boundaries">
     <h4>⚠️ 三个必须守住的边界</h4>
     <ul>
       <li>不要把 <strong>Session</strong> 和 <strong>RunState</strong> 混在一起 —— 会导致当前轮次、最大轮次错误、临时状态污染长期上下文。</li>
@@ -539,7 +729,7 @@ Tool
 <!-- ============================================================
      SECTION 02: 技术选型
      ============================================================ -->
-<section>
+<section id="sec-02">
   <div class="md-section-header">
     <span class="md-text-label md-color-secondary">SECTION 02</span>
     <h2 class="md-text-h2 md-font-mono md-color-primary">技术选型</h2>
@@ -551,7 +741,7 @@ Tool
   </p>
 
   <!-- Tech stack overview table -->
-  <table class="md-info-table">
+  <table class="md-info-table" id="sec-02-table">
     <thead>
       <tr>
         <th>领域</th>
@@ -656,7 +846,7 @@ Tool
   </div>
 
   <!-- Architecture mapping -->
-  <h3 class="md-text-h3 md-font-mono md-color-primary" style="margin-top: var(--md-space-lg);">技术选型与架构的映射</h3>
+  <h3 class="md-text-h3 md-font-mono md-color-primary" style="margin-top: var(--md-space-lg);" id="sec-02-arch">技术选型与架构的映射</h3>
   <div class="md-arch-map">
     <div class="md-arch-row"><strong>picocli</strong> → CLI 层</div>
     <div class="md-arch-row"><strong>Manual DI</strong> → Agent Core 层（组装 Agent + ToolRegistry + Session）</div>
@@ -670,7 +860,7 @@ Tool
 <!-- ============================================================
      SECTION 03: 工具层接口设计
      ============================================================ -->
-<section>
+<section id="sec-03">
   <div class="md-section-header">
     <span class="md-text-label md-color-secondary">SECTION 03</span>
     <h2 class="md-text-h2 md-font-mono md-color-primary">工具层接口设计</h2>
@@ -682,7 +872,7 @@ Tool
   </p>
 
   <!-- Design principle -->
-  <div class="md-card" style="background: var(--md-accent-yellow); margin-bottom: var(--md-space-md);">
+  <div class="md-card" style="background: var(--md-accent-yellow); margin-bottom: var(--md-space-md);" id="sec-03-interfaces">
     <div class="md-text-label md-color-secondary">设计原则</div>
     <h3 class="md-card-title md-text-h3 md-font-mono">厂商无关，格式转换归 LLM Client 层</h3>
     <p class="md-card-body md-text-body md-color-secondary">
@@ -730,7 +920,7 @@ Tool
   </div>
 
   <!-- Format converters -->
-  <h3 class="md-text-h3 md-font-mono md-color-primary" style="margin-top: var(--md-space-lg);">格式转换（归属 LLM Client 层）</h3>
+  <h3 class="md-text-h3 md-font-mono md-color-primary" style="margin-top: var(--md-space-lg);" id="sec-03-converters">格式转换（归属 LLM Client 层）</h3>
 
   <div class="md-card-grid" style="margin-top: var(--md-space-md);">
     <div class="md-card">
@@ -750,7 +940,7 @@ Tool
   </div>
 
   <!-- Diff table -->
-  <h3 class="md-text-h3 md-font-mono md-color-primary" style="margin-top: var(--md-space-lg);">与之前设计的差异</h3>
+  <h3 class="md-text-h3 md-font-mono md-color-primary" style="margin-top: var(--md-space-lg);" id="sec-03-evolution">与之前设计的差异</h3>
   <table class="md-info-table" style="margin-top: var(--md-space-sm);">
     <thead>
       <tr>
@@ -825,12 +1015,441 @@ Tool
 </section>
 
 <!-- ============================================================
+     SECTION 04: 工具参数注解
+     ============================================================ -->
+<section id="sec-04">
+  <div class="md-section-header">
+    <span class="md-text-label md-color-secondary">SECTION 04</span>
+    <h2 class="md-text-h2 md-font-mono md-color-primary">工具参数注解</h2>
+    <div class="md-section-divider"></div>
+  </div>
+
+  <p class="md-text-body md-color-secondary" style="margin-bottom: var(--md-space-md);">
+    关联设计文档：<a href="./md/001-Agent设计文档.md" style="color:var(--md-text-primary);">001-Agent 设计文档</a> · <a href="./md/004-工具参数注解.md" style="color:var(--md-text-primary);">004-工具参数注解</a>
+  </p>
+
+  <!-- Core conclusion -->
+  <div class="md-card" style="background: var(--md-accent-yellow); margin-bottom: var(--md-space-md);">
+    <div class="md-text-label md-color-secondary">核心结论</div>
+    <h3 class="md-card-title md-text-h3 md-font-mono">注解驱动 POJO，不做中间通用 Schema 对象模型</h3>
+    <p class="md-card-body md-text-body md-color-secondary">
+      工具参数约束通过 <span class="md-inline-code">@ToolParam</span> 和 <span class="md-inline-code">@ToolField</span> 注解声明在 POJO 上。Schema 生成器、校验器、Jackson 反序列化各自独立扫描注解，不做缓存、不共享中间对象。默认产出标准 JSON Schema，不同 LLM 提供商的格式适配由 LLM Client 层负责。
+    </p>
+  </div>
+
+  <!-- Annotation design cards -->
+  <div class="md-card-grid" id="sec-04-annotations">
+    <div class="md-card">
+      <div class="md-text-label md-color-secondary">类级注解</div>
+      <h3 class="md-card-title md-text-h3 md-font-mono">@ToolParam</h3>
+      <p class="md-card-body md-text-body md-color-secondary">
+        标注参数类，声明这是工具的参数对象。<br><br>
+        <span class="md-inline-code">name</span> — 工具参数的中文描述
+      </p>
+    </div>
+    <div class="md-card">
+      <div class="md-text-label md-color-secondary">字段级注解</div>
+      <h3 class="md-card-title md-text-h3 md-font-mono">@ToolField</h3>
+      <p class="md-card-body md-text-body md-color-secondary">
+        <span class="md-inline-code">name</span> — 字段名<br>
+        <span class="md-inline-code">desc</span> — 字段描述<br>
+        <span class="md-inline-code">rule</span> — 校验规则数组（按序执行）<br>
+        <span class="md-inline-code">typeConverter</span> — 自定义类型转换器（可选）
+      </p>
+    </div>
+    <div class="md-card">
+      <div class="md-text-label md-color-secondary">类型推导</div>
+      <h3 class="md-card-title md-text-h3 md-font-mono">TypeConverter 注册中心</h3>
+      <p class="md-card-body md-text-body md-color-secondary">
+        不再维护 <span class="md-inline-code">FieldType</span> 类型体系。通过反射从 Java 字段类型推导 JSON Schema 类型。<br>
+        <span class="md-inline-code">TypeConverter</span> — 类型转换器接口<br>
+        <span class="md-inline-code">TypeConverterRegistry</span> — 注册中心，默认支持 String / 数字 / List / Set / 枚举
+      </p>
+    </div>
+    <div class="md-card">
+      <div class="md-text-label md-color-secondary">校验规则</div>
+      <h3 class="md-card-title md-text-h3 md-font-mono">Rule 接口</h3>
+      <p class="md-card-body md-text-body md-color-secondary">
+        <span class="md-inline-code">Boolean validate(Object value)</span><br><br>
+        Array 类型时 value 为 List。按 @ToolField.rule() 声明顺序执行，任一失败立即返回。
+      </p>
+    </div>
+  </div>
+
+  <!-- Example -->
+  <h3 class="md-text-h3 md-font-mono md-color-primary" style="margin-top: var(--md-space-lg);" id="sec-04-example">示例：ReadFileParams</h3>
+  <div class="md-code">@ToolParam(name = "读文件工具的参数")
+public class ReadFileParams {
+    @ToolField(
+        name = "path",
+        desc = "文件的路径，支持相对路径和绝对路径",
+        rule = { RequiredRule.class }
+    )
+    private String path;
+
+    @ToolField(
+        name = "lines",
+        desc = "读取文件的具体行，如 '112' 或 '112-119'",
+        rule = { LinesRule.class }
+    )
+    private List&lt;String&gt; lines;
+}</div>
+
+  <!-- LinesRule validation -->
+  <div class="md-card-grid" style="margin-top: var(--md-space-md);">
+    <div class="md-card">
+      <div class="md-text-label md-color-secondary">LinesRule</div>
+      <h3 class="md-card-title md-text-h4 md-font-mono">合法值</h3>
+      <p class="md-card-body md-text-body md-color-secondary">
+        <span class="md-inline-code">"112"</span> → 读单行<br>
+        <span class="md-inline-code">"112-119"</span> → 读行范围（起始 ≤ 结束）
+      </p>
+    </div>
+    <div class="md-card">
+      <div class="md-text-label md-color-secondary">LinesRule</div>
+      <h3 class="md-card-title md-text-h4 md-font-mono">非法值</h3>
+      <p class="md-card-body md-text-body md-color-secondary">
+        <span class="md-inline-code">"119-112"</span> → 起始 > 结束 ❌<br>
+        <span class="md-inline-code">"112~119"</span> → 分隔符非 "-" ❌
+      </p>
+    </div>
+  </div>
+
+  <!-- Execution flow -->
+  <h3 class="md-text-h3 md-font-mono md-color-primary" style="margin-top: var(--md-space-lg);" id="sec-04-flow">工具调用链路</h3>
+  <ol class="md-steps" style="margin-top: var(--md-space-sm);">
+    <li><strong>LLM 返回 JSON。</strong> Agent Loop 收到 LLM 的 Function Call 响应，包含 JSON 参数。</li>
+    <li><strong>Jackson 反序列化。</strong> 根据 <span class="md-inline-code">ToolDefinition.paramType</span> 将 JSON 反序列化为 POJO 实例。</li>
+    <li><strong>Rule 链校验。</strong> 遍历 <span class="md-inline-code">@ToolField.rule()</span> 数组，按声明顺序执行。任一失败 → 返回 <span class="md-inline-code">ToolResult(INVALID_ARGUMENTS)</span>。</li>
+    <li><strong>执行工具。</strong> 校验通过后调用 <span class="md-inline-code">execute(pojo)</span>，返回 <span class="md-inline-code">ToolResult</span>。</li>
+  </ol>
+
+  <!-- Schema generation -->
+  <h3 class="md-text-h3 md-font-mono md-color-primary" style="margin-top: var(--md-space-lg);" id="sec-04-schema">Schema 生成</h3>
+
+  <div class="md-card-grid" style="margin-top: var(--md-space-md);">
+    <div class="md-card">
+      <div class="md-text-label md-color-secondary">职责分离</div>
+      <h3 class="md-card-title md-text-h4 md-font-mono">Schema 生成器 vs 校验器</h3>
+      <p class="md-card-body md-text-body md-color-secondary">
+        Schema 生成器只管产出标准 JSON Schema，校验器只管跑 Rule。两者独立扫描注解，职责不交叉。<span class="md-inline-code">Rule</span> 接口不提供 <span class="md-inline-code">toJsonSchema()</span> 方法，保持单一职责。
+      </p>
+    </div>
+    <div class="md-card">
+      <div class="md-text-label md-color-secondary">生成流程</div>
+      <h3 class="md-card-title md-text-h4 md-font-mono">Class → JSON Schema</h3>
+      <p class="md-card-body md-text-body md-color-secondary">
+        1. 检查是否标注 <span class="md-inline-code">@ToolParam</span><br>
+        2. 遍历字段，过滤 <span class="md-inline-code">@ToolField</span><br>
+        3. 通过 <span class="md-inline-code">TypeConverterRegistry</span> 查找类型转换器<br>
+        4. 扫描 rule 中是否有 RequiredRule → required 数组
+      </p>
+    </div>
+    <div class="md-card">
+      <div class="md-text-label md-color-secondary">映射策略</div>
+      <h3 class="md-card-title md-text-h4 md-font-mono">Rule → Schema</h3>
+      <p class="md-card-body md-text-body md-color-secondary">
+        映射由 Schema 生成器内部维护（如 RequiredRule → required 数组）。新增 Rule 时若需影响 Schema 结构，需同时修改生成器——这个代价可接受。
+      </p>
+    </div>
+    <div class="md-card">
+      <div class="md-text-label md-color-secondary">提供商适配</div>
+      <h3 class="md-card-title md-text-h4 md-font-mono">交 LLM Client 层</h3>
+      <p class="md-card-body md-text-body md-color-secondary">
+        Schema 生成器默认产出标准 JSON Schema（OpenAI 兼容）。其他提供商格式差异由 LLM Client 层转换，不侵入工具参数定义层。
+      </p>
+    </div>
+  </div>
+
+  <!-- Generated schema preview -->
+  <h4 class="md-text-h4 md-font-mono md-color-primary" style="margin-top: var(--md-space-md);">生成的 JSON Schema 示例</h4>
+  <div class="md-code">{
+  "type": "object",
+  "properties": {
+    "path": {
+      "type": "string",
+      "description": "文件的路径，支持相对路径和绝对路径"
+    },
+    "lines": {
+      "type": "array",
+      "description": "读取文件的具体行，如 '112' 或 '112-119'",
+      "items": { "type": "string" }
+    }
+  },
+  "required": ["path"],
+  "additionalProperties": false
+}</div>
+
+  <!-- ToolDefinition update -->
+  <h3 class="md-text-h3 md-font-mono md-color-primary" style="margin-top: var(--md-space-lg);">ToolDefinition 结构变更</h3>
+  <div class="md-card" style="background: var(--md-bg-off-white); margin-top: var(--md-space-sm);">
+    <div class="md-text-label md-color-secondary">变更</div>
+    <h3 class="md-card-title md-text-h3 md-font-mono">不再携带 JsonNode Schema，改用 Class&lt;?&gt; 绑定</h3>
+    <p class="md-card-body md-text-body md-color-secondary">
+      <span class="md-inline-code">ToolDefinition</span> 不再存储 <span class="md-inline-code">JsonNode</span> 格式的参数描述。改为直接绑定 <span class="md-inline-code">paramType</span>（参数 POJO 类的 <span class="md-inline-code">Class&lt;?&gt;</span>）和 <span class="md-inline-code">resultType</span>。Schema 按需从注解生成，避免了手拼 JSON 的维护负担。
+    </p>
+  </div>
+
+  <!-- Design evolution -->
+  <h3 class="md-text-h3 md-font-mono md-color-primary" style="margin-top: var(--md-space-lg);" id="sec-04-evolution">设计演变</h3>
+  <table class="md-info-table" style="margin-top: var(--md-space-sm);">
+    <thead>
+      <tr>
+        <th>变更点</th>
+        <th>原始方向</th>
+        <th>最终方向</th>
+        <th>原因</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>参数约束表达</td>
+        <td>自定义 Schema 格式（desc、fields 数组、arrayItem）</td>
+        <td>注解驱动 POJO + Schema 生成器</td>
+        <td class="md-color-secondary">自定义格式无法对接 OpenAI API；注解更贴近 Java 习惯</td>
+      </tr>
+      <tr>
+        <td>Schema 格式</td>
+        <td>内部自有格式</td>
+        <td>默认标准 JSON Schema，LLM Client 做适配</td>
+        <td class="md-color-secondary">降低内部复杂度，适配交给边界层</td>
+      </tr>
+      <tr>
+        <td>校验与 Schema 关联</td>
+        <td>Rule 提供 <span class="md-inline-code">toJsonSchema()</span></td>
+        <td>Schema 生成器独立维护映射</td>
+        <td class="md-color-secondary">保持 Rule 单一职责，不耦合 Schema 生成逻辑</td>
+      </tr>
+      <tr>
+        <td>ToolDefinition 参数</td>
+        <td>存 <span class="md-inline-code">JsonNode</span> 的 Schema 描述</td>
+        <td>存 <span class="md-inline-code">Class&lt;?&gt;</span> 参数类型</td>
+        <td class="md-color-secondary">避免手拼 JSON，Schema 按需生成</td>
+      </tr>
+      <tr>
+        <td>JSON Schema 之外的校验</td>
+        <td>—</td>
+        <td>内置于 Rule 中，校验时执行</td>
+        <td class="md-color-secondary">如 "119-112" 非法这类业务规则必须由代码校验</td>
+      </tr>
+      <tr>
+        <td>字段类型声明</td>
+        <td><span class="md-inline-code">@ToolField.type</span> + <span class="md-inline-code">FieldType</span> 嵌套注解体系</td>
+        <td>Java 字段类型反射推导 + <span class="md-inline-code">TypeConverter</span> 注册中心</td>
+        <td class="md-color-secondary">FieldType 在 Java 类型系统外又建并行体系，维护成本高；ArrayType.items 泛型信息在 class 字面量中丢失</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Original direction -->
+  <h3 class="md-text-h3 md-font-mono md-color-primary" style="margin-top: var(--md-space-lg);">原始方向</h3>
+  <p class="md-text-body md-color-secondary" style="margin-top: var(--md-space-sm);">
+    最初考虑定义一套面向人类文档的自定义 Schema 格式（用 <span class="md-inline-code">desc</span>、<span class="md-inline-code">fields</span> 数组、<span class="md-inline-code">arrayItem</span>、<span class="md-inline-code">examples</span> 等字段），同时用于文档生成和参数约束。该格式与 OpenAI 的函数调用参数格式不兼容。
+  </p>
+
+  <!-- Issues -->
+  <div class="md-highlight" style="margin-top: var(--md-space-md);">
+    <h4>讨论中发现的问题</h4>
+    <ul>
+      <li><strong>自定义格式不兼容 OpenAI API</strong> — 需额外转换层，不如直接从注解生成标准 JSON Schema。</li>
+      <li><strong>校验≠JSON Schema 表达范围</strong> — LinesRule 的 "119-112" 非法判断 JSON Schema 无法表达，必须由代码校验。中间模型收益有限。</li>
+      <li><strong>required 双重表达可合并</strong> — <span class="md-inline-code">RequiredRule</span> 同时服务于 Schema 生成（加入 required 数组）和校验（非空检查），不设独立的 required 属性。</li>
+      <li><strong>Rule 不应兼任 Schema 片段</strong> — 多个 Rule 的片段拼接复杂，且违反单一职责。改为 Schema 生成器内部维护映射。</li>
+      <li><strong>ToolDefinition 存 JsonNode 不够简洁</strong> — 改为存 <span class="md-inline-code">Class&lt;?&gt;</span>，Schema 按需从注解生成。</li>
+      <li><strong>第一版手写 TypeConverter，后续切 victools</strong> — 先跑通流程理解细节，接口设计已预留替换空间（面向 <span class="md-inline-code">TypeConverter</span> 接口编程）。后续替换为 Spring AI 同款的 <span class="md-inline-code">victools/jsonschema-generator</span>。</li>
+    </ul>
+  </div>
+
+  <!-- ============================================================
+       二次演变：移除 FieldType 类型体系
+       ============================================================ -->
+  <h3 class="md-text-h3 md-font-mono md-color-primary" style="margin-top: var(--md-space-lg);" id="sec-04-evolution2">二次演变：移除 FieldType 类型体系</h3>
+
+  <!-- Original FieldType design -->
+  <h4 class="md-text-h4 md-font-mono md-color-primary" style="margin-top: var(--md-space-md);">原始方案：FieldType 嵌套注解</h4>
+  <p class="md-text-body md-color-secondary" style="margin-top: var(--md-space-sm);">
+    <span class="md-inline-code">@ToolField</span> 通过 <span class="md-inline-code">type</span> 属性声明 <span class="md-inline-code">FieldType</span> 嵌套注解来指定字段类型。
+    <span class="md-inline-code">FieldType</span> 内部定义了 <span class="md-inline-code">StringType</span>、<span class="md-inline-code">NumberType</span>、<span class="md-inline-code">BooleanType</span>、<span class="md-inline-code">ArrayType</span>、<span class="md-inline-code">ObjectType</span> 五个子注解。
+  </p>
+
+  <div class="md-code">@Retention(RUNTIME) @Target({})
+public @interface FieldType {
+    @interface StringType {}
+    @interface NumberType {}
+    @interface BooleanType {}
+    @interface ArrayType {
+        Class&lt;? extends Annotation&gt; items();
+    }
+    @interface ObjectType {}
+}</div>
+
+  <!-- Issues -->
+  <div class="md-highlight" style="margin-top: var(--md-space-md);">
+    <h4>讨论中发现的问题</h4>
+    <ul>
+      <li><strong>维护两套并行类型体系</strong> — 字段声明了 <span class="md-inline-code">String path</span>，仍需额外标注 <span class="md-inline-code">type = FieldType.StringType.class</span>，冗余且易不一致。</li>
+      <li><strong>泛型信息丢失</strong> — <span class="md-inline-code">type = FieldType.ArrayType.class</span> 无法携带 items 子类型信息。class 字面量丢失注解成员值，Java 语法难以干净实现。</li>
+      <li><strong>扩展不便</strong> — 新增特殊格式（如 URL）需同时修改 FieldType 和 Schema 生成器，侵入点多。</li>
+      <li><strong>解决方案</strong> — 删除 FieldType，通过 <span class="md-inline-code">Field.getGenericType()</span> 反射推导 + <span class="md-inline-code">TypeConverter</span> 注册中心替代。<span class="md-inline-code">@ToolField.typeConverter</span> 留作自定义扩展点。</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================================================
      FOOTER
      ============================================================ -->
 <footer class="md-footer">
   <span>Code Review Agent — 设计文档索引</span>
-  <span>最后更新：2026-06-13</span>
+  <span>最后更新：2026-06-14</span>
 </footer>
+
+</main>
+</div><!-- /.md-layout -->
+
+<div class="md-section-nav" id="section-nav">
+  <button class="md-section-nav-btn prev" id="section-prev" aria-label="上一节">←</button>
+  <div class="md-section-nav-status">
+    <span class="index" id="section-nav-index">SECTION 01 / 04</span>
+    <span class="title" id="section-nav-title">Agent 整体设计</span>
+  </div>
+  <button class="md-section-nav-btn next" id="section-next" aria-label="下一节">→</button>
+</div>
+
+<script>
+const sections = [
+  {
+    id: 'sec-01',
+    title: 'Agent 整体设计',
+    outline: [
+      { id: 'sec-01-loop', label: 'Agent Loop 流程' },
+      { id: 'sec-01-objects', label: '核心对象边界' },
+      { id: 'sec-01-boundaries', label: '三个边界' }
+    ]
+  },
+  {
+    id: 'sec-02',
+    title: '技术选型',
+    outline: [
+      { id: 'sec-02-table', label: '选型详表' },
+      { id: 'sec-02-arch', label: '架构映射' }
+    ]
+  },
+  {
+    id: 'sec-03',
+    title: '工具层接口设计',
+    outline: [
+      { id: 'sec-03-interfaces', label: '核心接口' },
+      { id: 'sec-03-converters', label: '格式转换' },
+      { id: 'sec-03-evolution', label: '设计演变' }
+    ]
+  },
+  {
+    id: 'sec-04',
+    title: '工具参数注解',
+    outline: [
+      { id: 'sec-04-annotations', label: '注解设计' },
+      { id: 'sec-04-example', label: '示例' },
+      { id: 'sec-04-flow', label: '调用链路' },
+      { id: 'sec-04-schema', label: 'Schema 生成' },
+      { id: 'sec-04-evolution', label: '设计演变' },
+      { id: 'sec-04-evolution2', label: '二次演变' }
+    ]
+  }
+];
+
+const outlineLinksEl = document.getElementById('section-outline-links');
+const navIndexEl = document.getElementById('section-nav-index');
+const navTitleEl = document.getElementById('section-nav-title');
+const prevBtn = document.getElementById('section-prev');
+const nextBtn = document.getElementById('section-next');
+let activeSectionIndex = 0;
+
+function getCurrentSectionIndex() {
+  const offset = window.scrollY + window.innerHeight * 0.28;
+  let currentIndex = 0;
+  sections.forEach((section, index) => {
+    const el = document.getElementById(section.id);
+    if (el && el.offsetTop <= offset) currentIndex = index;
+  });
+  return currentIndex;
+}
+
+function getCurrentSubsectionId(section) {
+  const offset = window.scrollY + 120;
+  let currentId = section.outline[0] ? section.outline[0].id : section.id;
+  section.outline.forEach(item => {
+    const el = document.getElementById(item.id);
+    if (el && el.offsetTop <= offset) currentId = item.id;
+  });
+  return currentId;
+}
+
+function renderOutline(section) {
+  outlineLinksEl.innerHTML = section.outline
+    .map(item => '<a href="#' + item.id + '" data-id="' + item.id + '">' + item.label + '</a>')
+    .join('');
+}
+
+function updateOutlineActive(section) {
+  const currentId = getCurrentSubsectionId(section);
+  outlineLinksEl.querySelectorAll('a').forEach(link => {
+    link.classList.toggle('active', link.dataset.id === currentId);
+  });
+}
+
+function updateSectionNav() {
+  activeSectionIndex = getCurrentSectionIndex();
+  const current = sections[activeSectionIndex];
+  const currentOutlineFirst = outlineLinksEl.querySelector('a');
+
+  navIndexEl.textContent = 'SECTION ' + String(activeSectionIndex + 1).padStart(2, '0') + ' / ' + String(sections.length).padStart(2, '0');
+  navTitleEl.textContent = current.title;
+  prevBtn.disabled = activeSectionIndex === 0;
+  nextBtn.disabled = activeSectionIndex === sections.length - 1;
+
+  const renderedFirstId = currentOutlineFirst ? currentOutlineFirst.dataset.id : null;
+  const expectedFirstId = current.outline[0] ? current.outline[0].id : null;
+  if (renderedFirstId !== expectedFirstId) {
+    renderOutline(current);
+  }
+  updateOutlineActive(current);
+}
+
+function scrollToSection(index) {
+  const section = sections[index];
+  const el = document.getElementById(section.id);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+prevBtn.addEventListener('click', () => {
+  if (activeSectionIndex > 0) scrollToSection(activeSectionIndex - 1);
+});
+
+nextBtn.addEventListener('click', () => {
+  if (activeSectionIndex < sections.length - 1) scrollToSection(activeSectionIndex + 1);
+});
+
+document.addEventListener('keydown', (event) => {
+  const activeElement = document.activeElement;
+  const tagName = activeElement ? activeElement.tagName : '';
+  const isEditable = ['INPUT', 'TEXTAREA', 'SELECT'].includes(tagName) || (activeElement && activeElement.isContentEditable);
+  if (isEditable || event.metaKey || event.ctrlKey || event.altKey) return;
+
+  if (event.key === 'ArrowLeft' && activeSectionIndex > 0) {
+    event.preventDefault();
+    scrollToSection(activeSectionIndex - 1);
+  }
+
+  if (event.key === 'ArrowRight' && activeSectionIndex < sections.length - 1) {
+    event.preventDefault();
+    scrollToSection(activeSectionIndex + 1);
+  }
+});
+
+window.addEventListener('scroll', updateSectionNav, { passive: true });
+window.addEventListener('resize', updateSectionNav);
+updateSectionNav();
+</script>
 
 </body>
 </html>

@@ -93,3 +93,68 @@ HTTP客户端就选择OkHttp吧？不推荐Retrofit吗？
 
 ## 我该从哪一步开始呢？
 现在Gradle环境配置完成了，我该从何处开始呢？我不知道从哪一步开始？
+
+## 开发一个读工具
+```json
+{
+  "path": "./test.sql",
+  "lines": [
+    "112","112-119"
+  ]
+}
+```
+
+```json
+{
+  "type": "object",
+  "fields": [
+    {
+      "type": "string",
+      "name": "path",
+      "desc": "文件路径，支持相对路径，绝对路径",
+      "required": true,
+      "examples": [
+        {
+          "value": "./test.sql",
+          "desc": "当前目录下的test.sql文件"
+        },
+        {
+          "value": "/test/test.sql",
+          "desc": "绝对目录下test目录下的test.sql文件"
+        }
+      ]
+    },
+    {
+      "type": "array",
+      "name": "lines",
+      "desc": "读取文件的具体行",
+      "required": false,
+      "arrayItem": {
+        "type": "string",
+        "desc": "文件中的对应行数",
+        "examples": [
+          {
+            "value": "112",
+            "desc": "读取文件中112行的内容"
+          },
+          {
+            "value": "112-119",
+            "desc": "读取文件中112行到119行的内容"
+          }
+        ]
+        
+      }
+    }
+  ]
+}
+```
+我认为有下面这些注解：
+1. @ToolParam(name="读文件工具的参数") 注解在类上
+2. @ToolField(name="path",type=@FieldType.String,desc="文件的路径",required=true,rule={ToolParamRules.Required}) 注解在字段上
+3. @ToolField(name="lines",type=@FieldType.Array(items=@FieldType.String),desc="读取文件的具体行",required=false,rule={ToolParamRule.Lines}) 注解在字段上
+
+---
+我认为注解@ToolField不需要有属性type,如果有的话，会导致我们自己额外维护一套类型体系，我认为我们直接复用Java自己的类型体系，比如：
+1. String path 那么path的JSON Schema中类型为 String
+2. List<String> lines,那么lines的JSON Schema中的类型为 Array,items为String
+你觉得呢？

@@ -25,7 +25,8 @@ val versions = mapOf(
     "jackson" to "2.21.4",
     "slf4j" to "2.0.18",
     "logback" to "1.5.34",
-    "junit" to "5.14.4"
+    "junit" to "5.14.4",
+    "lombok" to "1.18.36"
 )
 
 dependencies {
@@ -44,6 +45,10 @@ dependencies {
     // Logging
     implementation("org.slf4j:slf4j-api:${versions["slf4j"]}")
     runtimeOnly("ch.qos.logback:logback-classic:${versions["logback"]}")
+
+    // Lombok
+    compileOnly("org.projectlombok:lombok:${versions["lombok"]}")
+    annotationProcessor("org.projectlombok:lombok:${versions["lombok"]}")
 
     // Testing
     testImplementation("org.junit.jupiter:junit-jupiter:${versions["junit"]}")
